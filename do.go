@@ -35,6 +35,33 @@ type RandomEncrypt struct {
 	cipherAlgo [6]string
 }
 
+func Encrypt(str string) string {
+	e := newRandomEncrypt()
+	passphrase, iv := e.key(0)
+	//fmt.Println(passphrase, iv)
+	s, err := openssl.AesCBCEncrypt([]byte(str), []byte(iv), []byte(passphrase), openssl.PKCS7_PADDING)
+	if err != nil {
+		panic(e)
+	}
+	return base64.StdEncoding.EncodeToString(s)
+}
+
+func Decrypt(str string) string {
+	e := newRandomEncrypt()
+	current := e.getTimestamp()
+	s, err := e.doDecrypt(str, 0)
+	if err != nil {
+		// 解决跨时区问题
+		if e.isReEncrypt(current) {
+			s, err = e.doDecrypt(str, current-e.timeInterval)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	return s
+}
+
 func newRandomEncrypt() RandomEncrypt {
 	e := RandomEncrypt{
 		timezoneOffset:   10,
@@ -68,36 +95,9 @@ func newRandomEncrypt() RandomEncrypt {
 	return e
 }
 
-func encrypt(str string) string {
-	e := newRandomEncrypt()
-	passphrase, iv := e.key(0)
-	//fmt.Println(passphrase, iv)
-	s, err := openssl.AesCBCEncrypt([]byte(str), []byte(iv), []byte(passphrase), openssl.PKCS7_PADDING)
-	if err != nil {
-		panic(e)
-	}
-	return base64.StdEncoding.EncodeToString(s)
-}
-
-//
+// 判断是否需要再次解密
 func (e *RandomEncrypt) isReEncrypt(current int64) bool {
 	return current%e.timeInterval <= e.secondRedundancy
-}
-
-func decrypt(str string) string {
-	e := newRandomEncrypt()
-	current := e.getTimestamp()
-	s, err := e.doDecrypt(str, 0)
-	if err != nil {
-		// 解决跨时区问题
-		if e.isReEncrypt(current) {
-			s, err = e.doDecrypt(str, current-e.timeInterval)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-	return s
 }
 func (e *RandomEncrypt) doDecrypt(str string, timestamp int64) (string, error) {
 	passphrase, iv := e.key(timestamp)

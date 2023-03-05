@@ -3,8 +3,8 @@ package random_encrypt
 import "fmt"
 
 func main() {
-	e := encrypt("hello world")
+	e := Encrypt("hello world")
 	fmt.Println(e)
-	s := decrypt(e)
+	s := Decrypt(e)
 	fmt.Println(s)
 }
