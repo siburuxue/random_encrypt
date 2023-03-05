@@ -1,4 +1,4 @@
-module random-encrypt
+module github.com/siburuxue/random-encrypt
 
 go 1.18
 
