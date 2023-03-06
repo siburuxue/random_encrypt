@@ -6,8 +6,8 @@
 示例代码：
 ```go
 e := random_encrypt.NewRandomEncrypt()
-s := e.setSalt("salt").encrypt("hello world")
+s := e.SetSalt("salt").Encrypt("hello world")
 fmt.Println(s)
-t := e.setSalt("salt").encrypt(s)
+t := e.SetSalt("salt").Decrypt(s)
 fmt.Println(t)
 ```

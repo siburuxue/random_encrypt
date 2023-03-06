@@ -38,7 +38,7 @@ type RandomEncrypt struct {
 	salt string
 }
 
-func (e *RandomEncrypt) encrypt(str string) string {
+func (e *RandomEncrypt) Encrypt(str string) string {
 	passphrase, iv := e.key(0)
 	//fmt.Println(passphrase, iv)
 	s, err := openssl.AesCBCEncrypt([]byte(str), []byte(passphrase), []byte(iv), openssl.PKCS7_PADDING)
@@ -48,7 +48,7 @@ func (e *RandomEncrypt) encrypt(str string) string {
 	return base64.StdEncoding.EncodeToString(s)
 }
 
-func (e *RandomEncrypt) decrypt(str string) string {
+func (e *RandomEncrypt) Decrypt(str string) string {
 	current := e.getTimestamp()
 	s, err := e.doDecrypt(str, 0)
 	if err != nil {
@@ -62,7 +62,7 @@ func (e *RandomEncrypt) decrypt(str string) string {
 	}
 	return s
 }
-func (e *RandomEncrypt) setSalt(salt string) *RandomEncrypt {
+func (e *RandomEncrypt) SetSalt(salt string) *RandomEncrypt {
 	e.salt = salt
 	return e
 }
