@@ -39,7 +39,7 @@ func Encrypt(str string) string {
 	e := newRandomEncrypt()
 	passphrase, iv := e.key(0)
 	//fmt.Println(passphrase, iv)
-	s, err := openssl.AesCBCEncrypt([]byte(str), []byte(iv), []byte(passphrase), openssl.PKCS7_PADDING)
+	s, err := openssl.AesCBCEncrypt([]byte(str), []byte(passphrase), []byte(iv), openssl.PKCS7_PADDING)
 	if err != nil {
 		panic(e)
 	}
@@ -105,7 +105,7 @@ func (e *RandomEncrypt) doDecrypt(str string, timestamp int64) (string, error) {
 	if err != nil {
 		panic(err)
 	}
-	s, err := openssl.AesCBCDecrypt(dst, []byte(iv), []byte(passphrase), openssl.PKCS7_PADDING)
+	s, err := openssl.AesCBCDecrypt(dst, []byte(passphrase), []byte(iv), openssl.PKCS7_PADDING)
 	return string(s), err
 }
 
