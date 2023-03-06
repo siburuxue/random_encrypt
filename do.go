@@ -137,7 +137,7 @@ func (e *RandomEncrypt) formatDatetime(timestamp int64) string {
 }
 
 func (e *RandomEncrypt) getEncryptKey(key string, index int) string {
-	d := []byte(key)
+	d := []byte(key + e.salt)
 	m := md5.New()
 	m.Write(d)
 	key = strings.ToLower(hex.EncodeToString(m.Sum(nil)))
