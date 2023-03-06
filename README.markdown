@@ -5,8 +5,9 @@
 
 示例代码：
 ```go
-e := random_encrypt.encrypt("hello world")
-fmt.Println(e)
-s := random_encrypt.decrypt(e)
+e := random_encrypt.NewRandomEncrypt()
+s := e.setSalt("salt").encrypt("hello world")
 fmt.Println(s)
+t := e.setSalt("salt").encrypt(s)
+fmt.Println(t)
 ```

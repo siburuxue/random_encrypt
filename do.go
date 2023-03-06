@@ -33,10 +33,12 @@ type RandomEncrypt struct {
 
 	// 加密算法
 	cipherAlgo [6]string
+
+	// 自定义盐值
+	salt string
 }
 
-func Encrypt(str string) string {
-	e := newRandomEncrypt()
+func (e *RandomEncrypt) encrypt(str string) string {
 	passphrase, iv := e.key(0)
 	//fmt.Println(passphrase, iv)
 	s, err := openssl.AesCBCEncrypt([]byte(str), []byte(passphrase), []byte(iv), openssl.PKCS7_PADDING)
@@ -46,8 +48,7 @@ func Encrypt(str string) string {
 	return base64.StdEncoding.EncodeToString(s)
 }
 
-func Decrypt(str string) string {
-	e := newRandomEncrypt()
+func (e *RandomEncrypt) decrypt(str string) string {
 	current := e.getTimestamp()
 	s, err := e.doDecrypt(str, 0)
 	if err != nil {
@@ -61,14 +62,18 @@ func Decrypt(str string) string {
 	}
 	return s
 }
-
-func newRandomEncrypt() RandomEncrypt {
+func (e *RandomEncrypt) setSalt(salt string) *RandomEncrypt {
+	e.salt = salt
+	return e
+}
+func NewRandomEncrypt() RandomEncrypt {
 	e := RandomEncrypt{
 		timezoneOffset:   10,
 		timeInterval:     5,
 		keyLength:        16,
 		secondRedundancy: 2,
 		timestamp:        0,
+		salt:             "",
 		keyMap: map[string]string{
 			"1": "#",
 			"2": "0",
