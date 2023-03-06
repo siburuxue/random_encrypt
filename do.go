@@ -64,7 +64,7 @@ func Decrypt(str string) string {
 
 func newRandomEncrypt() RandomEncrypt {
 	e := RandomEncrypt{
-		timezoneOffset:   8,
+		timezoneOffset:   10,
 		timeInterval:     5,
 		keyLength:        16,
 		secondRedundancy: 2,
