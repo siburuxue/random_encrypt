@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"github.com/forgoer/openssl"
 	"math"
 	"strconv"
@@ -62,10 +63,52 @@ func (e *RandomEncrypt) Decrypt(str string) string {
 	}
 	return s
 }
+
+// SetSalt 自定义盐值 加密时不能为空
 func (e *RandomEncrypt) SetSalt(salt string) *RandomEncrypt {
 	e.salt = salt
 	return e
 }
+
+// SetTimezoneOffset 自定义对齐时区 默认东八区
+func (e *RandomEncrypt) SetTimezoneOffset(offset int64) *RandomEncrypt {
+	e.timezoneOffset = offset
+	return e
+}
+
+// SetTimeInterval 自定义加密key有效时间 默认5秒
+func (e *RandomEncrypt) SetTimeInterval(timeInterval int64) *RandomEncrypt {
+	e.timeInterval = timeInterval
+	return e
+}
+
+// SetSecondRedundancy 自定义跨区间 冗余秒数 默认2秒
+func (e *RandomEncrypt) SetSecondRedundancy(secondRedundancy int64) *RandomEncrypt {
+	e.secondRedundancy = secondRedundancy
+	return e
+}
+
+// Config 自定义设置参数 map[string]interface{}{"salt": "salt", "offset": 10, "timeInterval": 7, "secondRedundancy": 3}
+func (e *RandomEncrypt) Config(config map[string]interface{}) *RandomEncrypt {
+	_, ok := config["salt"]
+	if ok {
+		e.SetSalt(fmt.Sprintf("%v", config["salt"]))
+	}
+	_, ok = config["offset"]
+	if ok {
+		e.SetTimezoneOffset(int64(config["offset"].(int)))
+	}
+	_, ok = config["timeInterval"]
+	if ok {
+		e.SetTimeInterval(int64(config["timeInterval"].(int)))
+	}
+	_, ok = config["secondRedundancy"]
+	if ok {
+		e.SetSecondRedundancy(int64(config["secondRedundancy"].(int)))
+	}
+	return e
+}
+
 func NewRandomEncrypt() RandomEncrypt {
 	e := RandomEncrypt{
 		timezoneOffset:   10,
