@@ -180,6 +180,9 @@ func (e *RandomEncrypt) formatDatetime(timestamp int64) string {
 }
 
 func (e *RandomEncrypt) getEncryptKey(key string, index int) string {
+	if e.salt == "" {
+		panic("the salt can not be empty")
+	}
 	d := []byte(key + e.salt)
 	m := md5.New()
 	m.Write(d)
