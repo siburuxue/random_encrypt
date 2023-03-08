@@ -1,4 +1,4 @@
-package main
+package random_encrypt
 
 import (
 	"crypto/md5"
