@@ -1,4 +1,4 @@
-package random_encrypt
+package main
 
 import (
 	"crypto/md5"
@@ -39,14 +39,14 @@ type RandomEncrypt struct {
 	salt string
 }
 
-func (e *RandomEncrypt) Encrypt(str string) string {
+func (e *RandomEncrypt) Encrypt(str string) (string, string, string, int64) {
 	passphrase, iv := e.key(0)
 	//fmt.Println(passphrase, iv)
 	s, err := openssl.AesCBCEncrypt([]byte(str), []byte(passphrase), []byte(iv), openssl.PKCS7_PADDING)
 	if err != nil {
 		panic(e)
 	}
-	return base64.StdEncoding.EncodeToString(s)
+	return base64.StdEncoding.EncodeToString(s), passphrase, iv, e.timestamp
 }
 
 func (e *RandomEncrypt) Decrypt(str string) string {
@@ -154,6 +154,15 @@ func (e *RandomEncrypt) doDecrypt(str string, timestamp int64) (string, error) {
 		panic(err)
 	}
 	s, err := openssl.AesCBCDecrypt(dst, []byte(passphrase), []byte(iv), openssl.PKCS7_PADDING)
+	return string(s), err
+}
+
+func (e *RandomEncrypt) DecryptByKeyIv(str string, key string, iv string) (string, error) {
+	dst, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		panic(err)
+	}
+	s, err := openssl.AesCBCDecrypt(dst, []byte(key), []byte(iv), openssl.PKCS7_PADDING)
 	return string(s), err
 }
 
