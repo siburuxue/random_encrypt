@@ -181,7 +181,8 @@ func (e *RandomEncrypt) Config(config map[string]interface{}) *RandomEncrypt {
 	return e
 }
 
-func NewRandomEncrypt() RandomEncrypt {
+// NewRandomEncrypt 初始化参数 map[string]interface{}{"salt": "salt", "offset": 10, "timeInterval": 7, "secondRedundancy": 3}
+func NewRandomEncrypt(config map[string]interface{}) RandomEncrypt {
 	e := RandomEncrypt{
 		timezoneOffset:   8,
 		timeInterval:     5,
@@ -212,5 +213,6 @@ func NewRandomEncrypt() RandomEncrypt {
 			"AES-256-CBC-HMAC-SHA256",
 		},
 	}
+	e.Config(config)
 	return e
 }

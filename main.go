@@ -5,9 +5,8 @@ import (
 )
 
 func main() {
-	e := NewRandomEncrypt()
 	config := map[string]interface{}{"salt": "salt"}
-	e.Config(config)
+	e := NewRandomEncrypt(config)
 	s, key, iv, timestamp := e.Encrypt("hello world")
 	fmt.Println(s)
 	fmt.Println(key)

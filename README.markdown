@@ -5,9 +5,8 @@
 
 示例代码：
 ```go
-e := random_encrypt.NewRandomEncrypt()
 config := map[string]interface{}{"salt": "salt"}
-e.Config(config)
+e := random_encrypt.NewRandomEncrypt(config)
 s, key, iv, timestamp := e.Encrypt("hello world")
 fmt.Println(s)
 fmt.Println(key)
