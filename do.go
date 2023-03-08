@@ -51,17 +51,89 @@ func (e *RandomEncrypt) Encrypt(str string) (string, string, string, int64) {
 
 func (e *RandomEncrypt) Decrypt(str string) string {
 	current := e.getTimestamp()
-	s, err := e.doDecrypt(str, 0)
+	s, err := e.DoDecrypt(str, current)
 	if err != nil {
-		// 解决跨时区问题
+		// 解决跨区间问题
 		if e.isReEncrypt(current) {
-			s, err = e.doDecrypt(str, current-e.timeInterval)
+			s, err = e.DoDecrypt(str, current-e.timeInterval)
 			if err != nil {
 				panic(err)
 			}
 		}
 	}
 	return s
+}
+
+func (e *RandomEncrypt) DoDecrypt(str string, timestamp int64) (string, error) {
+	passphrase, iv := e.key(timestamp)
+	fmt.Println(passphrase, iv)
+	return e.DecryptByKeyIv(str, passphrase, iv)
+}
+
+func (e *RandomEncrypt) DecryptByKeyIv(str string, key string, iv string) (string, error) {
+	dst, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		panic(err)
+	}
+	s, err := openssl.AesCBCDecrypt(dst, []byte(key), []byte(iv), openssl.PKCS7_PADDING)
+	return string(s), err
+}
+
+// 判断是否需要再次解密
+func (e *RandomEncrypt) isReEncrypt(current int64) bool {
+	return current%e.timeInterval <= e.secondRedundancy
+}
+
+// 获取加密方式
+func (e *RandomEncrypt) getCipherAlgo() string {
+	return e.cipherAlgo[0]
+}
+
+// 获取当前时间戳
+func (e *RandomEncrypt) getTimestamp() int64 {
+	return time.Now().Unix()
+}
+
+func (e *RandomEncrypt) getTimeGroup(timestamp int64) int64 {
+	return int64(math.Ceil(float64(timestamp)/float64(e.timeInterval))) * e.timeInterval
+}
+
+func (e *RandomEncrypt) formatDatetime(timestamp int64) string {
+	_, offset := time.Now().Zone()
+	offset /= 3600
+	seconds := (e.timezoneOffset - int64(offset)) * 3600
+	timestamp += seconds
+	return time.Unix(timestamp, 0).Format("20060102150405")
+}
+
+func (e *RandomEncrypt) getEncryptKey(key string, index int) string {
+	if e.salt == "" {
+		panic("the salt can not be empty")
+	}
+	d := []byte(key + e.salt)
+	m := md5.New()
+	m.Write(d)
+	key = strings.ToLower(hex.EncodeToString(m.Sum(nil)))
+	return key[index : index+e.keyLength]
+}
+
+func (e *RandomEncrypt) key(timestamp int64) (string, string) {
+	if timestamp == 0 {
+		timestamp = e.getTimestamp()
+	}
+	e.timestamp = timestamp
+	timestamp = e.getTimeGroup(timestamp)
+	datetime := e.formatDatetime(timestamp)
+	datetimeArr := strings.Split(datetime, "")
+	for i, s := range datetimeArr {
+		datetimeArr[i] = e.keyMap[s]
+	}
+	key := strings.Join(datetimeArr, "")
+	datetimeInt, _ := strconv.Atoi(datetime)
+	index := datetimeInt % e.keyLength
+	passphrase := datetime + key + datetime
+	iv := key + datetime + key
+	return e.getEncryptKey(passphrase, index), e.getEncryptKey(iv, index)
 }
 
 // SetSalt 自定义盐值 加密时不能为空
@@ -141,79 +213,4 @@ func NewRandomEncrypt() RandomEncrypt {
 		},
 	}
 	return e
-}
-
-// 判断是否需要再次解密
-func (e *RandomEncrypt) isReEncrypt(current int64) bool {
-	return current%e.timeInterval <= e.secondRedundancy
-}
-func (e *RandomEncrypt) doDecrypt(str string, timestamp int64) (string, error) {
-	passphrase, iv := e.key(timestamp)
-	dst, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		panic(err)
-	}
-	s, err := openssl.AesCBCDecrypt(dst, []byte(passphrase), []byte(iv), openssl.PKCS7_PADDING)
-	return string(s), err
-}
-
-func (e *RandomEncrypt) DecryptByKeyIv(str string, key string, iv string) (string, error) {
-	dst, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		panic(err)
-	}
-	s, err := openssl.AesCBCDecrypt(dst, []byte(key), []byte(iv), openssl.PKCS7_PADDING)
-	return string(s), err
-}
-
-// 获取加密方式
-func (e *RandomEncrypt) getCipherAlgo() string {
-	return e.cipherAlgo[0]
-}
-
-// 获取当前时间戳
-func (e *RandomEncrypt) getTimestamp() int64 {
-	return time.Now().Unix()
-}
-
-func (e *RandomEncrypt) getTimeGroup(timestamp int64) int64 {
-	return int64(math.Ceil(float64(timestamp)/float64(e.timeInterval))) * e.timeInterval
-}
-
-func (e *RandomEncrypt) formatDatetime(timestamp int64) string {
-	_, offset := time.Now().Zone()
-	offset /= 3600
-	seconds := (e.timezoneOffset - int64(offset)) * 3600
-	timestamp += seconds
-	return time.Unix(timestamp, 0).Format("20060102150405")
-}
-
-func (e *RandomEncrypt) getEncryptKey(key string, index int) string {
-	if e.salt == "" {
-		panic("the salt can not be empty")
-	}
-	d := []byte(key + e.salt)
-	m := md5.New()
-	m.Write(d)
-	key = strings.ToLower(hex.EncodeToString(m.Sum(nil)))
-	return key[index : index+e.keyLength]
-}
-
-func (e *RandomEncrypt) key(timestamp int64) (string, string) {
-	if timestamp == 0 {
-		timestamp = e.getTimestamp()
-	}
-	e.timestamp = timestamp
-	timestamp = e.getTimeGroup(timestamp)
-	datetime := e.formatDatetime(timestamp)
-	datetimeArr := strings.Split(datetime, "")
-	for i, s := range datetimeArr {
-		datetimeArr[i] = e.keyMap[s]
-	}
-	key := strings.Join(datetimeArr, "")
-	datetimeInt, _ := strconv.Atoi(datetime)
-	index := datetimeInt % e.keyLength
-	passphrase := datetime + key + datetime
-	iv := key + datetime + key
-	return e.getEncryptKey(passphrase, index), e.getEncryptKey(iv, index)
 }
