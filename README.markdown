@@ -9,7 +9,7 @@
 #### Encrypt函数返回 (加密后字符串,key,iv,加密时使用的时间戳) 供解密失败后备查。
 
 ## Install
-```go
+```shell
 go get -u github.com/siburuxue/random_encrypt
 ```
 
