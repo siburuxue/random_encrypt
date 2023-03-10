@@ -10,7 +10,7 @@
 
 ## Install
 ```go
-go get -u github.com/siburuxue/random_encrypt
+go get -u github.com/siburuxue/go_random_encrypt
 ```
 
 示例代码：
